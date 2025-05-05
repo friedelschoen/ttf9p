@@ -16,32 +16,15 @@ const (
 	Maxsubfwidth      = 3000 /* rough */
 )
 
-type Fontchar struct {
-	X      int
-	Top    uint8
-	Bottom uint8
-	Left   uint8
-	Width  uint8
-}
-
-func (c Fontchar) Encode() []byte {
-	return []byte{
-		byte(c.X >> 0),
-		byte(c.X >> 8),
-		c.Top,
-		c.Bottom,
-		c.Left,
-		c.Width,
-	}
-}
-
 func main() {
 	ptsz := 16
+	dpi := 72
 	hint := font.HintingNone
 
 	hintstr := ""
 
-	pflag.IntVarP(&ptsz, "point", "p", 16, "point size")
+	pflag.IntVarP(&ptsz, "point", "s", 16, "point size")
+	pflag.IntVarP(&ptsz, "dpi", "d", 72, "dpi")
 	pflag.StringVarP(&hintstr, "hinting", "H", "none", "hinting: none, full, vertical") // was normal, light, mono, none, light_subpixel
 
 	pflag.Parse()
@@ -62,7 +45,7 @@ func main() {
 		os.Exit(1)
 	}
 	args := pflag.Args()
-	opath := args[len(args)-1]
+	opath := fmt.Sprintf("%s.%d", args[len(args)-1], ptsz)
 
 	s := fmt.Sprintf("%s.font", opath)
 
@@ -87,7 +70,7 @@ func main() {
 		f, err := opentype.NewFace(fontfile, &opentype.FaceOptions{
 			Hinting: hint,
 			Size:    float64(ptsz),
-			DPI:     72,
+			DPI:     float64(dpi),
 		})
 		if err != nil {
 			panic(err)
@@ -106,11 +89,7 @@ func main() {
 			start := rn.Min
 
 			for r := rn.Min; r <= rn.Max; r++ {
-				bounds, advance, ok := f.GlyphBounds(r)
-				if !ok {
-					continue
-				}
-				advance = max(advance, bounds.Max.X-bounds.Min.X)
+				advance, _ := f.GlyphAdvance(r)
 
 				if w+advance > Maxsubfwidth {
 					if start < r {

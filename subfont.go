@@ -13,6 +13,25 @@ import (
 	"golang.org/x/image/math/fixed"
 )
 
+type Fontchar struct {
+	X      int
+	Top    uint8
+	Bottom uint8
+	Left   uint8
+	Width  uint8
+}
+
+func (c Fontchar) Encode() []byte {
+	return []byte{
+		byte(c.X >> 0),
+		byte(c.X >> 8),
+		c.Top,
+		c.Bottom,
+		c.Left,
+		c.Width,
+	}
+}
+
 func toSubfont(fdfont io.Writer, opath string, f font.Face, rn Range, width int) {
 	height := f.Metrics().Height.Ceil()
 	length := rn.Max - rn.Min + 1
@@ -24,10 +43,7 @@ func toSubfont(fdfont io.Writer, opath string, f font.Face, rn Range, width int)
 	fcs := make([]Fontchar, length)
 	dot := fixed.Point26_6{Y: f.Metrics().Ascent}
 	for i := range length {
-		bounds, advance, _ := f.GlyphBounds(rune(i) + rn.Min)
-		advance = max(advance, bounds.Max.X-bounds.Min.X)
-
-		dr, mask, maskp, _, _ := f.Glyph(dot, rune(i)+rn.Min)
+		dr, mask, maskp, advance, _ := f.Glyph(dot, rune(i)+rn.Min)
 		if !dr.Empty() {
 			draw.DrawMask(img, dr, image.White, image.Point{}, mask, maskp, draw.Src)
 		}
