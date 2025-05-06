@@ -13,23 +13,23 @@ const (
 	Maxsubfwidth = 3000 /* rough */
 )
 
-func writeFont(prefix string, ptsz, dpi int, hint font.Hinting, inputs []string) {
+func writeFont(prefix string, ptsz, dpi int, hint font.Hinting, inputs []string) error {
 	s := fmt.Sprintf("%s.%d.font", prefix, ptsz)
 
 	fdfont, err := os.Create(s)
 	if err != nil {
-		panic(err)
+		return err
 	}
 	defer fdfont.Close()
 
 	for i, ofile := range inputs {
 		content, err := os.ReadFile(ofile)
 		if err != nil {
-			panic(err)
+			return err
 		}
 		fontfile, err := opentype.Parse(content)
 		if err != nil {
-			panic(err)
+			return err
 		}
 
 		f, err := opentype.NewFace(fontfile, &opentype.FaceOptions{
@@ -38,7 +38,7 @@ func writeFont(prefix string, ptsz, dpi int, hint font.Hinting, inputs []string)
 			DPI:     float64(dpi),
 		})
 		if err != nil {
-			panic(err)
+			return err
 		}
 
 		/* is header */
@@ -48,7 +48,7 @@ func writeFont(prefix string, ptsz, dpi int, hint font.Hinting, inputs []string)
 
 		ranges, err := GetCharset(fontfile)
 		if err != nil {
-			panic(err)
+			return err
 		}
 		for _, rn := range ranges {
 			var w fixed.Int26_6
@@ -59,7 +59,10 @@ func writeFont(prefix string, ptsz, dpi int, hint font.Hinting, inputs []string)
 
 				if w+advance > Maxsubfwidth {
 					if start < r {
-						writeSubfont(fdfont, prefix, ptsz, f, Range{start, r - 1}, w.Ceil())
+						err := writeSubfont(fdfont, prefix, ptsz, f, Range{start, r - 1}, w.Ceil())
+						if err != nil {
+							return err
+						}
 					}
 					start = r
 					w = 0
@@ -68,8 +71,12 @@ func writeFont(prefix string, ptsz, dpi int, hint font.Hinting, inputs []string)
 			}
 
 			if w > 0 {
-				writeSubfont(fdfont, prefix, ptsz, f, Range{start, rn.Max}, w.Round())
+				err := writeSubfont(fdfont, prefix, ptsz, f, Range{start, rn.Max}, w.Round())
+				if err != nil {
+					return err
+				}
 			}
 		}
 	}
+	return nil
 }

@@ -39,7 +39,9 @@ func main() {
 	case "vertical":
 		hint = font.HintingVertical
 	default:
-		panic("invalid hinting")
+		fmt.Fprintf(os.Stderr, "invalid hinting")
+		flag.Usage()
+		os.Exit(1)
 	}
 
 	if flag.NArg() < 3 {
@@ -57,18 +59,35 @@ func main() {
 		sizes = append(sizes, int(sz))
 		args = args[1:]
 	}
+	if len(sizes) == 0 {
+		fmt.Fprintf(os.Stderr, "missing font-sizes")
+		flag.Usage()
+		os.Exit(1)
+	}
 	if len(args) == 0 {
-		panic("no prefix")
+		fmt.Fprintf(os.Stderr, "missing output-prefix")
+		flag.Usage()
+		os.Exit(1)
 	}
 	prefix := args[0]
 	args = args[1:]
 	if len(args) == 0 {
-		panic("no input")
+		fmt.Fprintf(os.Stderr, "missing input-font")
+		flag.Usage()
+		os.Exit(1)
 	}
 
-	os.MkdirAll(path.Dir(prefix), 0755)
+	err := os.MkdirAll(path.Dir(prefix), 0755)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "unable to create directory: %v", err)
+		os.Exit(1)
+	}
 
 	for _, sz := range sizes {
-		writeFont(prefix, sz, *dpi, hint, args)
+		err := writeFont(prefix, sz, *dpi, hint, args)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "unable to write font: %v", err)
+			os.Exit(1)
+		}
 	}
 }

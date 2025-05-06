@@ -32,7 +32,7 @@ func (c Fontchar) Encode() []byte {
 	}
 }
 
-func writeSubfont(fdfont io.Writer, prefix string, ptsz int, f font.Face, rn Range, width int) {
+func writeSubfont(fdfont io.Writer, prefix string, ptsz int, f font.Face, rn Range, width int) error {
 	height := f.Metrics().Height.Ceil()
 	length := rn.Max - rn.Min + 1
 
@@ -87,7 +87,7 @@ func writeSubfont(fdfont io.Writer, prefix string, ptsz int, f font.Face, rn Ran
 
 	subfont, err := os.Create(pat)
 	if err != nil {
-		panic(err)
+		return err
 	}
 	defer f.Close()
 
@@ -99,4 +99,5 @@ func writeSubfont(fdfont io.Writer, prefix string, ptsz int, f font.Face, rn Ran
 		subfont.Write(c.Encode())
 	}
 	subfont.Write(Fontchar{X: width}.Encode())
+	return nil
 }
