@@ -24,7 +24,7 @@ Arguments:
 
 Flags:
 `
-		out.Write([]byte(fmt.Sprintf(help, prog)))
+		fmt.Fprintf(out, help, prog)
 		flag.PrintDefaults()
 		example := `
 Example:
@@ -36,7 +36,7 @@ Hinting options:
   full      enables full hinting
   vertical  enables vertical hinting only
 `
-		out.Write([]byte(fmt.Sprintf(example, prog)))
+		fmt.Fprintf(out, example, prog)
 	}
 
 	dpi := flag.Int("dpi", 72, "dpi")
