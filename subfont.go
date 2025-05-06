@@ -32,11 +32,11 @@ func (c Fontchar) Encode() []byte {
 	}
 }
 
-func toSubfont(fdfont io.Writer, opath string, f font.Face, rn Range, width int) {
+func writeSubfont(fdfont io.Writer, prefix string, ptsz int, f font.Face, rn Range, width int) {
 	height := f.Metrics().Height.Ceil()
 	length := rn.Max - rn.Min + 1
 
-	fmt.Fprintf(fdfont, "0x%X\t0x%X\t%s.%X-%X\n", rn.Min, rn.Max, path.Base(opath), rn.Min, rn.Max)
+	fmt.Fprintf(fdfont, "0x%X\t0x%X\t%s.%d.%X-%X\n", rn.Min, rn.Max, path.Base(prefix), ptsz, rn.Min, rn.Max)
 
 	img := image.NewGray(image.Rectangle{Max: image.Point{width, height}})
 
@@ -58,7 +58,7 @@ func toSubfont(fdfont io.Writer, opath string, f font.Face, rn Range, width int)
 		dot.X += advance
 	}
 
-	pat := fmt.Sprintf("%s.%X-%X", opath, rn.Min, rn.Max)
+	pat := fmt.Sprintf("%s.%d.%X-%X", prefix, ptsz, rn.Min, rn.Max)
 
 	pix := img.Pix
 	format := "k8"

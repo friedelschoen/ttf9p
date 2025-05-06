@@ -19,24 +19,7 @@ This project is based on [`ttfs` by ftrvxmtrx](https://git.sr.ht/~ft/ttfs/tree) 
 git clone https://github.com/friedelschoen/ttfs
 cd ttfs
 go build
-````
-
-## Usage
-
-```sh
-./ttfs [options] font1.ttf [font2.ttf ...] myfont/myfont.16
 ```
-
-Example:
-
-```sh
-./ttfs -p 14 -H none DejaVuSansMono.ttf /lib/font/bit/dejavu/dejavu.14
-```
-
-This will generate:
-
-* `dejavu/dejavu.14.font` metadata file
-* one or more subfont image files like `dejavu/dejavu.14.0020-007F`, `dejavu/dejavu.14.00A0-00FF`, etc.
 
 ## Notes
 
@@ -45,4 +28,4 @@ This will generate:
 
 ## License
 
-Zlib-style license. See [LICENSE](LICENSE).
+Zlib-license. See [LICENSE](LICENSE).

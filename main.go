@@ -4,32 +4,47 @@ import (
 	"fmt"
 	"os"
 	"path"
+	"strconv"
 
 	"github.com/spf13/pflag"
 	"golang.org/x/image/font"
-	"golang.org/x/image/font/opentype"
-	"golang.org/x/image/math/fixed"
-)
-
-const (
-	Substitute   rune = 0xfffd
-	Maxsubfwidth      = 3000 /* rough */
 )
 
 func main() {
-	ptsz := 16
-	dpi := 72
-	hint := font.HintingNone
+	pflag.Usage = func() {
+		prog := path.Base(os.Args[0])
+		out := pflag.CommandLine.Output()
+		help := `Usage:
+  %[1]s [flags] <size>... <prefix> <fontfile>...
 
-	hintstr := ""
+Arguments:
+  <size>        One or more point sizes to render (e.g. 12 16 24)
+  <prefix>      Output prefix for generated files
+  <fontfile>    One or more TTF/OTF font files to include
 
-	pflag.IntVarP(&ptsz, "point", "s", 16, "point size")
-	pflag.IntVarP(&ptsz, "dpi", "d", 72, "dpi")
-	pflag.StringVarP(&hintstr, "hinting", "H", "none", "hinting: none, full, vertical") // was normal, light, mono, none, light_subpixel
+Flags:
+`
+		out.Write([]byte(fmt.Sprintf(help, prog)))
+		pflag.PrintDefaults()
+		example := `
+Example:
+  %[1]s -d 96 -H full 12 16 output fonts/DejaVuSans.ttf
+  => creates output.12.font and output.16.font + subfonts from the given TTF
 
+Hinting options:
+  none      disables hinting
+  full      enables full hinting
+  vertical  enables vertical hinting only
+`
+		out.Write([]byte(fmt.Sprintf(example, prog)))
+	}
+
+	dpi := pflag.IntP("dpi", "d", 72, "dpi")
+	hintstr := pflag.StringP("hinting", "H", "none", "hinting: none, full, vertical") // was normal, light, mono, none, light_subpixel
 	pflag.Parse()
 
-	switch hintstr {
+	var hint font.Hinting
+	switch *hintstr {
 	case "none":
 		hint = font.HintingNone
 	case "full":
@@ -40,70 +55,33 @@ func main() {
 		panic("invalid hinting")
 	}
 
-	if pflag.NArg() < 2 {
+	if pflag.NArg() < 3 {
 		pflag.Usage()
 		os.Exit(1)
 	}
 	args := pflag.Args()
-	opath := fmt.Sprintf("%s.%d", args[len(args)-1], ptsz)
 
-	s := fmt.Sprintf("%s.font", opath)
-
-	os.MkdirAll(path.Dir(opath), 0755)
-
-	fdfont, err := os.Create(s)
-	if err != nil {
-		panic(err)
+	var sizes []int
+	for len(args) > 0 {
+		sz, err := strconv.ParseUint(args[0], 10, 32)
+		if err != nil {
+			break
+		}
+		sizes = append(sizes, int(sz))
+		args = args[1:]
 	}
-	defer fdfont.Close()
+	if len(args) == 0 {
+		panic("no prefix")
+	}
+	prefix := args[0]
+	args = args[1:]
+	if len(args) == 0 {
+		panic("no input")
+	}
 
-	for i, ofile := range args[:len(args)-1] {
-		content, err := os.ReadFile(ofile)
-		if err != nil {
-			panic(err)
-		}
-		fontfile, err := opentype.Parse(content)
-		if err != nil {
-			panic(err)
-		}
+	os.MkdirAll(path.Dir(prefix), 0755)
 
-		f, err := opentype.NewFace(fontfile, &opentype.FaceOptions{
-			Hinting: hint,
-			Size:    float64(ptsz),
-			DPI:     float64(dpi),
-		})
-		if err != nil {
-			panic(err)
-		}
-
-		if i == 0 {
-			fmt.Fprintf(fdfont, "%-4d %d\n", f.Metrics().Height.Ceil(), f.Metrics().Ascent.Round())
-		}
-
-		ranges, err := GetCharset(fontfile)
-		if err != nil {
-			panic(err)
-		}
-		for _, rn := range ranges {
-			var w fixed.Int26_6
-			start := rn.Min
-
-			for r := rn.Min; r <= rn.Max; r++ {
-				advance, _ := f.GlyphAdvance(r)
-
-				if w+advance > Maxsubfwidth {
-					if start < r {
-						toSubfont(fdfont, opath, f, Range{start, r - 1}, w.Ceil())
-					}
-					start = r
-					w = 0
-				}
-				w += advance
-			}
-
-			if w > 0 {
-				toSubfont(fdfont, opath, f, Range{start, rn.Max}, w.Round())
-			}
-		}
+	for _, sz := range sizes {
+		writeFont(prefix, sz, *dpi, hint, args)
 	}
 }
