@@ -1,42 +1,29 @@
 package main
 
 import (
+	_ "embed"
 	"flag"
 	"fmt"
 	"os"
 	"path"
 	"strconv"
+	"strings"
 
 	"golang.org/x/image/font"
 )
+
+//go:embed help.txt
+var helpmsg string
 
 func main() {
 	flag.Usage = func() {
 		prog := path.Base(os.Args[0])
 		out := flag.CommandLine.Output()
-		help := `Usage:
-  %[1]s [flags] <size>... <prefix> <fontfile>...
 
-Arguments:
-  <size>        One or more point sizes to render (e.g. 12 16 24)
-  <prefix>      Output prefix for generated files
-  <fontfile>    One or more TTF/OTF font files to include
-
-Flags:
-`
-		fmt.Fprintf(out, help, prog)
+		pre, post, _ := strings.Cut(strings.ReplaceAll(helpmsg, "{}", prog), "%%")
+		fmt.Fprint(out, pre)
 		flag.PrintDefaults()
-		example := `
-Example:
-  %[1]s -d 96 -H full 12 16 output fonts/DejaVuSans.ttf
-  => creates output.12.font and output.16.font + subfonts from the given TTF
-
-Hinting options:
-  none      disables hinting
-  full      enables full hinting
-  vertical  enables vertical hinting only
-`
-		fmt.Fprintf(out, example, prog)
+		fmt.Fprint(out, post)
 	}
 
 	dpi := flag.Int("dpi", 72, "dpi")

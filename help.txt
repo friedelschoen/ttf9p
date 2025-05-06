@@ -1,0 +1,19 @@
+Usage:
+  {} [flags] <size>... <prefix> <fontfile>...
+
+Arguments:
+  <size>        One or more point sizes to render (e.g. 12 16 24)
+  <prefix>      Output prefix for generated files.
+                Generated files are <prefix>.<size>.font and <prefix>.<size>.<range>
+  <fontfile>    One or more TTF/OTF font files to include
+
+Flags:
+%%
+Example:
+  {} -dpi 96 -hinting full 12 16 output fonts/DejaVuSans.ttf
+  => creates output.12.font and output.16.font + subfonts from the given TTF
+
+Hinting options:
+  none      disables hinting
+  full      enables full hinting
+  vertical  enables vertical hinting only
