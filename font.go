@@ -41,8 +41,9 @@ func writeFont(prefix string, ptsz, dpi int, hint font.Hinting, inputs []string)
 			panic(err)
 		}
 
+		/* is header */
 		if i == 0 {
-			fmt.Fprintf(fdfont, "%-4d %d\n", f.Metrics().Height.Ceil(), f.Metrics().Ascent.Round())
+			fmt.Fprintf(fdfont, "%-4d %d\n", f.Metrics().Height.Ceil(), f.Metrics().Ascent.Ceil())
 		}
 
 		ranges, err := GetCharset(fontfile)
