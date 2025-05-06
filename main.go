@@ -1,19 +1,19 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"os"
 	"path"
 	"strconv"
 
-	"github.com/spf13/pflag"
 	"golang.org/x/image/font"
 )
 
 func main() {
-	pflag.Usage = func() {
+	flag.Usage = func() {
 		prog := path.Base(os.Args[0])
-		out := pflag.CommandLine.Output()
+		out := flag.CommandLine.Output()
 		help := `Usage:
   %[1]s [flags] <size>... <prefix> <fontfile>...
 
@@ -25,7 +25,7 @@ Arguments:
 Flags:
 `
 		out.Write([]byte(fmt.Sprintf(help, prog)))
-		pflag.PrintDefaults()
+		flag.PrintDefaults()
 		example := `
 Example:
   %[1]s -d 96 -H full 12 16 output fonts/DejaVuSans.ttf
@@ -39,9 +39,9 @@ Hinting options:
 		out.Write([]byte(fmt.Sprintf(example, prog)))
 	}
 
-	dpi := pflag.IntP("dpi", "d", 72, "dpi")
-	hintstr := pflag.StringP("hinting", "H", "none", "hinting: none, full, vertical") // was normal, light, mono, none, light_subpixel
-	pflag.Parse()
+	dpi := flag.Int("dpi", 72, "dpi")
+	hintstr := flag.String("hinting", "none", "hinting: none, full, vertical") // was normal, light, mono, none, light_subpixel
+	flag.Parse()
 
 	var hint font.Hinting
 	switch *hintstr {
@@ -55,11 +55,11 @@ Hinting options:
 		panic("invalid hinting")
 	}
 
-	if pflag.NArg() < 3 {
-		pflag.Usage()
+	if flag.NArg() < 3 {
+		flag.Usage()
 		os.Exit(1)
 	}
-	args := pflag.Args()
+	args := flag.Args()
 
 	var sizes []int
 	for len(args) > 0 {

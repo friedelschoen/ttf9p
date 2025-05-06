@@ -5,8 +5,6 @@ import (
 	"golang.org/x/image/font/sfnt"
 )
 
-const maxRange = 0x1fff
-
 type Range struct {
 	Min rune
 	Max rune
