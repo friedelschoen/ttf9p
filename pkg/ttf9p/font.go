@@ -1,4 +1,4 @@
-package main
+package ttf9p
 
 import (
 	"fmt"
@@ -13,7 +13,7 @@ const (
 	Maxsubfwidth = 3000 /* rough */
 )
 
-func writeFont(prefix string, ptsz, dpi int, hint font.Hinting, inputs []string) error {
+func WriteFont(prefix string, ptsz, dpi int, hint font.Hinting, inputs []string) error {
 	s := fmt.Sprintf("%s.%d.font", prefix, ptsz)
 
 	fdfont, err := os.Create(s)

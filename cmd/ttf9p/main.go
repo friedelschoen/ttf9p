@@ -9,6 +9,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/friedelschoen/ttfs/pkg/ttf9p"
 	"golang.org/x/image/font"
 )
 
@@ -84,7 +85,7 @@ func main() {
 	}
 
 	for _, sz := range sizes {
-		err := writeFont(prefix, sz, *dpi, hint, args)
+		err := ttf9p.WriteFont(prefix, sz, *dpi, hint, args)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "unable to write font: %v", err)
 			os.Exit(1)

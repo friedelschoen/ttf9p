@@ -1,4 +1,4 @@
-package main
+package ttf9p
 
 import (
 	"golang.org/x/image/font/opentype"
