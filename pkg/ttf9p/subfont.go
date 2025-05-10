@@ -7,7 +7,6 @@ import (
 	"io"
 	"os"
 	"path"
-	"slices"
 
 	"golang.org/x/image/font"
 	"golang.org/x/image/math/fixed"
@@ -60,40 +59,13 @@ func writeSubfont(fdfont io.Writer, prefix string, ptsz int, f font.Face, rn Ran
 
 	pat := fmt.Sprintf("%s.%d.%X-%X", prefix, ptsz, rn.Min, rn.Max)
 
-	pix := img.Pix
-	format := "k8"
-	hasgray := slices.ContainsFunc(pix, func(p byte) bool {
-		return p != 0x00 && p != 0xff
-	})
-	if !hasgray {
-		format = "k1"
-		newpix := make([]byte, 0, len(pix))
-		for y := 0; y < height; y++ {
-			b := y * width
-			for x := 0; x < width; x += 8 {
-				t := 0
-				for i := 0; i < 8; i++ {
-					t <<= 1
-					if x+i < width {
-						t |= int(pix[b] & 1)
-						b++
-					}
-				}
-				newpix = append(newpix, byte(t))
-			}
-		}
-		pix = newpix
-	}
-
 	subfont, err := os.Create(pat)
 	if err != nil {
 		return err
 	}
 	defer f.Close()
+	WriteImage(subfont, img)
 
-	// final fontchar
-	fmt.Fprintf(subfont, "%11s %11d %11d %11d %11d ", format, 0, 0, width, height)
-	subfont.Write(pix)
 	fmt.Fprintf(subfont, "%11d %11d %11d ", len(fcs), height, f.Metrics().Ascent.Round())
 	for _, c := range fcs {
 		subfont.Write(c.Encode())
